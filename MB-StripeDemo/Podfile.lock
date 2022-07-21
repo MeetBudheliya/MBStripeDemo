@@ -1,5 +1,5 @@
 PODS:
-  - Alamofire (5.5.0)
+  - Alamofire (5.6.2)
   - Stripe (22.6.0):
     - Stripe/Stripe3DS2 (= 22.6.0)
     - StripeApplePay (= 22.6.0)
@@ -28,7 +28,7 @@ SPEC REPOS:
     - StripeUICore
 
 SPEC CHECKSUMS:
-  Alamofire: 1c4fb5369c3fe93d2857c780d8bbe09f06f97e7c
+  Alamofire: d368e1ff8a298e6dde360e35a3e68e6c610e7204
   Stripe: 4dfbdf728f31b178f682bde8709336ec9a2c29e8
   StripeApplePay: 5c1a8b4b017c48f824dfb27e6ea05a328d7c57c8
   StripeCore: 9b44be7bcfe6905257f5094ab2d76fdf8adb5747

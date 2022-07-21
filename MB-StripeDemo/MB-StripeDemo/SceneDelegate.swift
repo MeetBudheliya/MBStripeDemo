@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Stripe
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -18,6 +19,22 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
         guard let _ = (scene as? UIWindowScene) else { return }
     }
+
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        if let urlContext = URLContexts.first {
+
+            let url = urlContext.url
+            let stripeHandled = StripeAPI.handleURLCallback(with: url)
+
+            if !stripeHandled {
+                // This was not a stripe url, do whatever url handling your app
+                // normally does, if any.
+            }
+        }
+    }
+
+//    
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

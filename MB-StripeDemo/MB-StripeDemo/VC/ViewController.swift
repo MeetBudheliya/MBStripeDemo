@@ -26,43 +26,28 @@ class ViewController: UIViewController {
         //UI setup
         self.title = "Payable Amount : \(self.amount)"
 
+
         payButton.setTitle("Pay now", for: .normal)
         payButton.backgroundColor = .systemIndigo
         payButton.layer.cornerRadius = 5
         payButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         payButton.addTarget(self, action: #selector(pay), for: .touchUpInside)
-        payButton.isEnabled = false
+        payButton.isEnabled = true
 
         tableSetup()
         tblPaymentAmounts.selectRow(at: IndexPath(row: 0, section: 0), animated: true, scrollPosition: .top)
+
 
     }
 
     @objc
     func pay() {
+        
+//        createCustomer()
+        self.createPaymentIntent()
 
-        guard let paymentIntentClientSecret = client_secret else {
-            return
-        }
-
-        var configuration = PaymentSheet.Configuration()
-        configuration.merchantDisplayName = "MB Solution, Inc."
-
-        let paymentSheet = PaymentSheet(
-            paymentIntentClientSecret: paymentIntentClientSecret,
-            configuration: configuration)
-
-        paymentSheet.present(from: self) { [weak self] (paymentResult) in
-            switch paymentResult {
-            case .completed:
-                self?.alert(msg: "Payment complete!")
-            case .canceled:
-                print("Payment canceled!")
-            case .failed(let error):
-                self?.alert(msg: error.localizedDescription)
-            }
-        }
     }
+
 
     //MARK: - Create Payment Intent
     func createPaymentIntent(){
@@ -80,9 +65,41 @@ class ViewController: UIViewController {
                     client_secret = UserDefaults.standard.string(forKey: "client_secret")
                     print("Created PaymentIntent")
 
-                    DispatchQueue.main.async {
-                        self.payButton.isEnabled = true
+
+                    guard let paymentIntentClientSecret = client_secret else {
+                        return
                     }
+
+                    var configuration = PaymentSheet.Configuration()
+                    configuration.merchantDisplayName = "MB Solution, Inc."
+                   configuration.returnURL = "mbdemo://stripe-redirect"
+
+                    configuration.applePay = .init(
+                        merchantId: "com.foo.example", merchantCountryCode: "US")
+//                    configuration.customer = .init(
+//                        id: Customer_ID ?? "", ephemeralKeySecret: ephemeral_key ?? "-")
+//                    configuration.returnURL = "payments-example://stripe-redirect"
+//                     Set allowsDelayedPaymentMethods to true if your business can handle payment methods that complete payment after a delay, like SEPA Debit and Sofort.
+//                    configuration.allowsDelayedPaymentMethods = true
+
+                    let paymentSheet = PaymentSheet(
+                        paymentIntentClientSecret: paymentIntentClientSecret,
+                        configuration: configuration)
+
+                    paymentSheet.present(from: self) { [weak self] (paymentResult) in
+                        switch paymentResult {
+                        case .completed:
+                            self?.alert(msg: "Payment complete!")
+                        case .canceled:
+                            print("Payment canceled!")
+                        case .failed(let error):
+                            self?.alert(msg: error.localizedDescription)
+                        }
+                    }
+
+//                    DispatchQueue.main.async {
+//                        self.payButton.isEnabled = true
+//                    }
                     print("client_secret : \(client_secret ?? "-")")
                 }else{
                     self.alert(msg: "client secret not found!!!")
@@ -93,61 +110,62 @@ class ViewController: UIViewController {
         }
     }
 
-    //    //MARK: - Create Customer
-    //    func createCustomer(){
-    //        let params = ["name":"meet",
-    //                      "email":"meet@gmail.com",
-    //                      "balance":1250,
-    //                      "description":"This amount is joining amount..."] as [String : Any]
-    //        AF.request(URL(string: api_customers)!, method: .post, parameters: params, encoding: URLEncoding.default, headers: header).response { response in
-    //
-    //            switch response.result{
-    //            case .success(_):
-    //                let json = response.data?.convertToDictionary()
-    //                print(json as Any)
-    //                if let id = json?.value(forKey: "id") as? String{
-    //                    UserDefaults.standard.set(id, forKey: "CustID")
-    //                    Customer_ID = UserDefaults.standard.string(forKey: "CustID")
-    //                    self.generateEphemeralKey()
-    //                }else{
-    //                    self.alert(msg: "Customer ID not found!!!")
-    //                }
-    //            case .failure(_):
-    //                self.alert(msg: "ERROR : \(response.error?.localizedDescription ?? "-")")
-    //            }
-    //        }
-    //    }
-    //
-    //    //MARK: - Get Ephemeral key
-    //    func generateEphemeralKey(){
-    //
-    //        guard let cust_id = Customer_ID else {
-    //            self.createCustomer()
-    //            return
-    //        }
-    //        print("Customer_ID : \(cust_id)")
-    //
-    //        let params = ["customer": cust_id] as [String : Any]
-    //        let newHeader:HTTPHeaders = ["Authorization": "Bearer \(Secret_Key)",
-    //                                     "Stripe-Version": "2020-08-27"]
-    //
-    //        AF.request(URL(string: api_ephemeral_keys)!, method: .post, parameters: params, encoding: URLEncoding.default, headers: newHeader).response { response in
-    //
-    //            switch response.result{
-    //            case .success(_):
-    //                let json = response.data?.convertToDictionary()
-    //                print(json as Any)
-    //                if let id = json?.value(forKey: "id") as? String{
-    //                    UserDefaults.standard.set(id, forKey: "ephemeral_key")
-    //                    ephemeral_key = UserDefaults.standard.string(forKey: "ephemeral_key")
-    //                }else{
-    //                    self.alert(msg: "Ephemeral Key not found!!!")
-    //                }
-    //            case .failure(_):
-    //                self.alert(msg: "ERROR : \(response.error?.localizedDescription ?? "-")")
-    //            }
-    //        }
-    //    }
+        //MARK: - Create Customer
+        func createCustomer(){
+            let params = ["name":"meet",
+                          "email":"meet@gmail.com",
+                          "balance":1250,
+                          "description":"This amount is joining amount..."] as [String : Any]
+            AF.request(URL(string: api_customers)!, method: .post, parameters: params, encoding: URLEncoding.default, headers: header).response { response in
+
+                switch response.result{
+                case .success(_):
+                    let json = response.data?.convertToDictionary()
+                    print(json as Any)
+                    if let id = json?.value(forKey: "id") as? String{
+                        UserDefaults.standard.set(id, forKey: "CustID")
+                        Customer_ID = UserDefaults.standard.string(forKey: "CustID")
+                        self.generateEphemeralKey()
+                    }else{
+                        self.alert(msg: "Customer ID not found!!!")
+                    }
+                case .failure(_):
+                    self.alert(msg: "ERROR : \(response.error?.localizedDescription ?? "-")")
+                }
+            }
+        }
+
+        //MARK: - Get Ephemeral key
+        func generateEphemeralKey(){
+
+            guard let cust_id = Customer_ID else {
+                self.createCustomer()
+                return
+            }
+            print("Customer_ID : \(cust_id)")
+
+            let params = ["customer": cust_id] as [String : Any]
+            let newHeader:HTTPHeaders = ["Authorization": "Bearer \(Secret_Key)",
+                                         "Stripe-Version": "2020-08-27"]
+
+            AF.request(URL(string: api_ephemeral_keys)!, method: .post, parameters: params, encoding: URLEncoding.default, headers: newHeader).response { response in
+
+                switch response.result{
+                case .success(_):
+                    let json = response.data?.convertToDictionary()
+                    print(json as Any)
+                    if let id = json?.value(forKey: "secret") as? String{
+                        UserDefaults.standard.set(id, forKey: "ephemeral_key")
+                        ephemeral_key = UserDefaults.standard.string(forKey: "ephemeral_key")
+                        self.createPaymentIntent()
+                    }else{
+                        self.alert(msg: "Ephemeral Key not found!!!")
+                    }
+                case .failure(_):
+                    self.alert(msg: "ERROR : \(response.error?.localizedDescription ?? "-")")
+                }
+            }
+        }
 
 }
 
@@ -168,7 +186,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource{
         let type = types[indexPath.row] as NSDictionary
         cell.lblTitle.text = type.value(forKey: "type") as? String
         cell.lblDesc.text = type.value(forKey: "desc") as? String
-        cell.lblAmount.text = "₹\(type.value(forKey: "amount") as? Int ?? 0)"
+        cell.lblAmount.text = "\(type.value(forKey: "amount") as? Int ?? 0)"
         return cell
     }
 
@@ -176,8 +194,7 @@ extension ViewController: UITableViewDelegate, UITableViewDataSource{
         let type = types[indexPath.row] as NSDictionary
         self.amount = type.value(forKey: "amount") as? Int ?? 0
 
-        self.title = "Payable Amount : ₹\(self.amount)"
-        self.createPaymentIntent()
+        self.title = "Payable Amount : \(self.amount)"
     }
 
 }
